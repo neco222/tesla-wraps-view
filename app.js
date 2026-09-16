@@ -30,7 +30,7 @@ if (['car', 'map', 'compare'].includes(initialParams.get('view'))) activeView = 
 // This is a two-dimensional fit guide, not Tesla's proprietary 3D UV mapping.
 const surfacePanels = [
   { name: 'hood', source: [[366, 174], [656, 174], [656, 400], [366, 400]], target: [[100, 573], [337, 652], [455, 545], [228, 470]] },
-  { name: 'front fascia', source: [[320, 30], [700, 30], [700, 141], [320, 141]], target: [[66, 657], [309, 742], [338, 675], [90, 597]] },
+  { name: 'front fascia', source: [[320, 100], [700, 100], [700, 140], [320, 140]], target: [[66, 657], [309, 742], [338, 675], [90, 597]] },
   { name: 'front wing', source: [[210, 167], [80, 167], [80, 365], [210, 365]], target: [[272, 484], [307, 639], [423, 674], [455, 544]] },
   { name: 'front side', source: [[210, 378], [70, 378], [70, 612], [210, 612]], target: [[455, 539], [401, 684], [603, 667], [634, 470]] },
   { name: 'rear side', source: [[210, 612], [70, 612], [70, 842], [210, 842]], target: [[634, 470], [603, 667], [767, 560], [810, 389]] },
@@ -89,6 +89,31 @@ function drawMappedPanel(context, image, panel, width, height) {
   drawMappedTriangle(context, image, [panel.source[0], panel.source[2], panel.source[3]], [panel.target[0], panel.target[2], panel.target[3]], width, height);
 }
 
+function sampleWrapColors(image) {
+  const sampleCanvas = document.createElement('canvas');
+  sampleCanvas.width = 1024; sampleCanvas.height = 1024;
+  const sampleContext = sampleCanvas.getContext('2d', { willReadFrequently: true });
+  sampleContext.drawImage(image, 0, 0, 1024, 1024);
+  function sample(x, y) {
+    const data = sampleContext.getImageData(x - 8, y - 8, 16, 16).data;
+    let red = 0, green = 0, blue = 0, alpha = 0;
+    for (let index = 0; index < data.length; index += 4) {
+      const weight = data[index + 3] / 255;
+      red += data[index] * weight;
+      green += data[index + 1] * weight;
+      blue += data[index + 2] * weight;
+      alpha += weight;
+    }
+    if (!alpha) return [255, 255, 255, 0];
+    return [Math.round(red / alpha), Math.round(green / alpha), Math.round(blue / alpha), Math.min(1, alpha / 256)];
+  }
+  return { front: sample(320, 80), rear: sample(140, 700) };
+}
+
+function rgba([red, green, blue, alpha]) {
+  return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+}
+
 function getBodyMask(w, h) {
   if (bodyMaskCache?.width === w && bodyMaskCache?.height === h) return bodyMaskCache;
   const source = document.createElement('canvas');
@@ -125,6 +150,17 @@ async function renderPreview() {
   const texture = customImage || await loadImage(`assets/${selected[2]}`);
   if (sequence !== renderSequence) return;
   const bodyMask = getBodyMask(w, h);
+  const colors = sampleWrapColors(texture);
+  const baseLayer = document.createElement('canvas');
+  baseLayer.width = w; baseLayer.height = h;
+  const baseContext = baseLayer.getContext('2d');
+  const gradient = baseContext.createLinearGradient(w * .10, h * .68, w * .90, h * .42);
+  gradient.addColorStop(0, rgba(colors.front));
+  gradient.addColorStop(1, rgba(colors.rear));
+  baseContext.fillStyle = gradient;
+  baseContext.fillRect(0, 0, w, h);
+  baseContext.globalCompositeOperation = 'destination-in';
+  baseContext.drawImage(bodyMask, 0, 0);
   const textureLayer = document.createElement('canvas');
   textureLayer.width = w; textureLayer.height = h;
   const textureContext = textureLayer.getContext('2d');
@@ -134,8 +170,10 @@ async function renderPreview() {
   ctx.clearRect(0, 0, w, h);
   ctx.drawImage(vehicle, 0, 0, w, h);
   ctx.save();
-  ctx.globalAlpha = .95;
   ctx.globalCompositeOperation = 'multiply';
+  ctx.globalAlpha = .9;
+  ctx.drawImage(baseLayer, 0, 0);
+  ctx.globalAlpha = .68;
   ctx.drawImage(textureLayer, 0, 0);
   ctx.restore();
 }
