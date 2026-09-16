@@ -20,6 +20,7 @@ let activeView = 'car';
 let customImage = null;
 let dragX = 0;
 let dragStart = null;
+let bodyMaskCache = null;
 
 function getWrapColor(name) {
   const colors = {
@@ -44,6 +45,35 @@ function loadImage(src) {
   return new Promise((resolve, reject) => { const image = new Image(); image.onload = () => resolve(image); image.onerror = reject; image.src = src; });
 }
 
+function getBodyMask(w, h) {
+  if (bodyMaskCache?.width === w && bodyMaskCache?.height === h) return bodyMaskCache;
+  const source = document.createElement('canvas');
+  source.width = w; source.height = h;
+  const sourceContext = source.getContext('2d', { willReadFrequently: true });
+  sourceContext.drawImage(vehicle, 0, 0, w, h);
+  const pixels = sourceContext.getImageData(0, 0, w, h).data;
+  const mask = document.createElement('canvas');
+  mask.width = w; mask.height = h;
+  const maskContext = mask.getContext('2d');
+  const maskPixels = maskContext.createImageData(w, h);
+  for (let i = 0; i < pixels.length; i += 4) {
+    const x = (i / 4) % w;
+    const y = Math.floor((i / 4) / w);
+    const brightness = pixels[i] * .2126 + pixels[i + 1] * .7152 + pixels[i + 2] * .0722;
+    const insideCarBounds = y < h * .79 && x > w * .045 && x < w * .96;
+    // The supplied render has a dark studio background. Brightness cleanly
+    // separates the painted panels from glass, tires, and that background.
+    const alpha = insideCarBounds ? Math.max(0, Math.min(255, (brightness - 30) * 5.5)) : 0;
+    maskPixels.data[i] = 255;
+    maskPixels.data[i + 1] = 255;
+    maskPixels.data[i + 2] = 255;
+    maskPixels.data[i + 3] = alpha;
+  }
+  maskContext.putImageData(maskPixels, 0, 0);
+  bodyMaskCache = mask;
+  return mask;
+}
+
 async function renderPreview() {
   if (!vehicle.complete || !vehicle.naturalWidth) return;
   const w = canvas.width; const h = canvas.height;
@@ -53,33 +83,33 @@ async function renderPreview() {
   ctx.drawImage(vehicle, 0, 0, w, h);
   ctx.restore();
   const texture = customImage || await loadImage(`assets/${selected[2]}`);
+  const bodyMask = getBodyMask(w, h);
+  const tintLayer = document.createElement('canvas');
+  tintLayer.width = w; tintLayer.height = h;
+  const tintContext = tintLayer.getContext('2d');
+  tintContext.fillStyle = getWrapColor(selected[0]);
+  tintContext.fillRect(0, 0, w, h);
+  tintContext.globalCompositeOperation = 'destination-in';
+  tintContext.drawImage(bodyMask, 0, 0);
+
+  const textureLayer = document.createElement('canvas');
+  textureLayer.width = w; textureLayer.height = h;
+  const textureContext = textureLayer.getContext('2d');
+  textureContext.drawImage(texture, w * .035, h * .05, w * .93, h * .86);
+  textureContext.globalCompositeOperation = 'destination-in';
+  textureContext.drawImage(bodyMask, 0, 0);
+
   ctx.save();
   ctx.translate(dragX * (window.devicePixelRatio || 1), 0);
-  // The official texture is a top-down surface map. Clip it to the visible
-  // Model 3 silhouette so the editor reads as a car preview, not a floating map.
-  ctx.beginPath();
-  ctx.moveTo(w * .075, h * .66);
-  ctx.lineTo(w * .13, h * .57);
-  ctx.lineTo(w * .34, h * .44);
-  ctx.lineTo(w * .49, h * .305);
-  ctx.lineTo(w * .69, h * .34);
-  ctx.lineTo(w * .86, h * .47);
-  ctx.lineTo(w * .935, h * .63);
-  ctx.lineTo(w * .86, h * .76);
-  ctx.lineTo(w * .63, h * .81);
-  ctx.lineTo(w * .36, h * .86);
-  ctx.lineTo(w * .15, h * .79);
-  ctx.closePath();
-  ctx.clip();
-  ctx.globalAlpha = .3;
+  // Paint the car's actual bright body pixels first, preserving shading and
+  // leaving windows, tires, and the studio background untouched.
+  ctx.globalAlpha = .9;
+  ctx.globalCompositeOperation = 'color';
+  ctx.drawImage(tintLayer, 0, 0);
+  // Add the official UV artwork only after it has been clipped to the body mask.
+  ctx.globalAlpha = .62;
   ctx.globalCompositeOperation = 'multiply';
-  ctx.fillStyle = getWrapColor(selected[0]);
-  ctx.fill();
-  ctx.globalAlpha = .72;
-  ctx.drawImage(texture, w * .035, h * .05, w * .93, h * .86);
-  ctx.globalAlpha = .14;
-  ctx.globalCompositeOperation = 'screen';
-  ctx.drawImage(texture, w * .035, h * .05, w * .93, h * .86);
+  ctx.drawImage(textureLayer, 0, 0);
   ctx.restore();
 }
 
