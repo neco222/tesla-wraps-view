@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0b0c0e" />
+    <title>Wrap Lab — Tesla wrap preview</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="#top" aria-label="Wrap Lab home">
+          <span class="brand-mark"><i></i><i></i><i></i></span>
+          <span>WRAP<span class="brand-muted">LAB</span></span>
+        </a>
+        <nav class="topnav" aria-label="メインナビゲーション">
+          <a class="active" href="#studio">STUDIO</a>
+          <a href="#collection">COLLECTION</a>
+          <a href="#how-it-works">HOW IT WORKS</a>
+        </nav>
+        <div class="topbar-meta">
+          <span class="live-dot"></span>
+          <span>MODEL 3 / PREVIEW 01</span>
+        </div>
+      </header>
+
+      <main id="top">
+        <section class="intro" id="studio">
+          <div>
+            <p class="eyebrow">TESLA CUSTOM WRAPS / DIGITAL FIT CHECK</p>
+            <h1>Give your<br /><em>Model 3</em> a new skin.</h1>
+          </div>
+          <div class="intro-copy">
+            <p>公式のラップテンプレートをベースに、気になるデザインを車体に重ねて確認できます。</p>
+            <span class="mono-note">01 — SELECT A WRAP&nbsp;&nbsp; 02 — SEE IT ON THE CAR</span>
+          </div>
+        </section>
+
+        <section class="studio-grid" aria-label="Tesla Model 3 wrap preview studio">
+          <div class="preview-panel">
+            <div class="preview-toolbar">
+              <div class="toolbar-label"><span class="pulse"></span> LIVE SURFACE PREVIEW</div>
+              <div class="view-switch" role="group" aria-label="表示切り替え">
+                <button class="view-btn active" data-view="car">CAR</button>
+                <button class="view-btn" data-view="map">MAP</button>
+              </div>
+            </div>
+            <div class="preview-stage" id="previewStage">
+              <div class="stage-grid"></div>
+              <div class="stage-number">M3 / 01</div>
+              <div class="stage-hint">DRAG TO EXPLORE <span>↗</span></div>
+              <canvas id="previewCanvas" aria-label="選択中のラップを適用したTesla Model 3のプレビュー"></canvas>
+              <div class="map-preview" id="mapPreview" aria-hidden="true">
+                <div class="map-tag">OFFICIAL SURFACE MAP</div>
+                <img id="mapImage" src="assets/Acid_Drip.png" alt="選択中のラップのサーフェスマップ" />
+              </div>
+              <div class="loading-state" id="loadingState">LOADING SURFACE<span>...</span></div>
+            </div>
+            <div class="preview-footer">
+              <div>
+                <span class="footer-label">CURRENT WRAP</span>
+                <strong id="currentWrapName">Acid Drip</strong>
+              </div>
+              <div class="footer-stats">
+                <span><small>FIT</small><b>MODEL 3</b></span>
+                <span><small>STATUS</small><b class="green">READY</b></span>
+              </div>
+            </div>
+          </div>
+
+          <aside class="control-panel" id="collection">
+            <div class="control-heading">
+              <div>
+                <p class="eyebrow">THE COLLECTION</p>
+                <h2>Find your finish.</h2>
+              </div>
+              <span class="count" id="wrapCount">20 / 20</span>
+            </div>
+
+            <div class="search-box">
+              <span>⌕</span>
+              <input id="searchInput" type="search" placeholder="Search wraps" autocomplete="off" />
+              <kbd>/</kbd>
+            </div>
+            <div class="filter-row" role="group" aria-label="ラップのカテゴリ">
+              <button class="filter-btn active" data-filter="all">ALL</button>
+              <button class="filter-btn" data-filter="graphic">GRAPHIC</button>
+              <button class="filter-btn" data-filter="nature">NATURE</button>
+              <button class="filter-btn" data-filter="retro">RETRO</button>
+            </div>
+
+            <div class="wrap-list" id="wrapList" aria-live="polite"></div>
+
+            <div class="upload-card">
+              <div class="upload-icon">＋</div>
+              <div>
+                <strong>Bring your own design</strong>
+                <p>公式テンプレートのPNGを読み込む</p>
+              </div>
+              <label class="upload-button" for="uploadInput">UPLOAD</label>
+              <input id="uploadInput" type="file" accept="image/png,image/jpeg" hidden />
+            </div>
+          </aside>
+        </section>
+
+        <section class="detail-strip" id="how-it-works">
+          <div class="detail-intro">
+            <p class="eyebrow">YOUR CONFIGURATION</p>
+            <h2>Make it yours.</h2>
+          </div>
+          <div class="detail-item">
+            <span>MODEL</span>
+            <strong>Model 3</strong>
+            <small>Standard body profile</small>
+          </div>
+          <div class="detail-item">
+            <span>FINISH</span>
+            <div class="finish-value"><i id="finishSwatch"></i><strong id="finishName">Acid Drip</strong></div>
+            <small>Digital preview / 1024 × 1024</small>
+          </div>
+          <div class="detail-item action-item">
+            <button class="save-btn" id="saveBtn"><span>♡</span> SAVE CONFIGURATION</button>
+            <small id="saveStatus">Your selection stays in this browser</small>
+          </div>
+        </section>
+
+        <section class="note-section">
+          <div class="note-line"></div>
+          <p>Preview is for creative direction only. Always test fit, material, and print specifications with your wrap installer before production.</p>
+          <a href="https://github.com/teslamotors/custom-wraps/tree/master/model3" target="_blank" rel="noreferrer">VIEW OFFICIAL TEMPLATE <span>↗</span></a>
+        </section>
+      </main>
+
+      <footer class="footer">
+        <span>WRAPLAB / BUILT FOR THE DETAIL-OBSESSED</span>
+        <span>© 2026 / OPEN SOURCE PREVIEW</span>
+      </footer>
+    </div>
+    <script src="app.js"></script>
+  </body>
+</html>
