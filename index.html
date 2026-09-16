@@ -35,7 +35,7 @@
             <h1>Give your<br /><em>Model 3</em> a new skin.</h1>
           </div>
           <div class="intro-copy">
-            <p>公式のラップテンプレートをベースに、気になるデザインを車体に重ねて確認できます。</p>
+            <p>公式のラップ展開図を見ながら、Model 3の各ボディ面にデザインを当てた参考プレビューを確認できます。</p>
             <span class="mono-note">01 — SELECT A WRAP&nbsp;&nbsp; 02 — SEE IT ON THE CAR</span>
           </div>
         </section>
@@ -43,20 +43,29 @@
         <section class="studio-grid" aria-label="Tesla Model 3 wrap preview studio">
           <div class="preview-panel">
             <div class="preview-toolbar">
-              <div class="toolbar-label"><span class="pulse"></span> LIVE SURFACE PREVIEW</div>
+              <div class="toolbar-label"><span class="pulse"></span> MODEL 3 / UV PREVIEW</div>
               <div class="view-switch" role="group" aria-label="表示切り替え">
                 <button class="view-btn active" data-view="car">CAR</button>
-                <button class="view-btn" data-view="map">MAP</button>
+                <button class="view-btn" data-view="map">UV MAP</button>
+                <button class="view-btn" data-view="compare">COMPARE</button>
               </div>
             </div>
             <div class="preview-stage" id="previewStage">
               <div class="stage-grid"></div>
               <div class="stage-number">M3 / 01</div>
-              <div class="stage-hint">DRAG TO EXPLORE <span>↗</span></div>
+              <div class="stage-hint">STATIC VIEW <span>↗</span></div>
               <canvas id="previewCanvas" aria-label="選択中のラップを適用したTesla Model 3のプレビュー"></canvas>
               <div class="map-preview" id="mapPreview" aria-hidden="true">
-                <div class="map-tag">OFFICIAL SURFACE MAP</div>
+                <div class="map-tag">OFFICIAL UV IMAGE · FRONT ↑</div>
                 <img id="mapImage" src="assets/Acid_Drip.png" alt="選択中のラップのサーフェスマップ" />
+                <svg class="uv-labels" viewBox="0 0 1024 1024" aria-label="展開図上の対応する車体部位">
+                  <rect x="366" y="174" width="290" height="226" />
+                  <rect x="70" y="378" width="140" height="234" />
+                  <rect x="70" y="612" width="140" height="230" />
+                  <text x="395" y="221">1 BONNET</text>
+                  <text x="73" y="406">2 FRONT</text>
+                  <text x="73" y="640">3 REAR</text>
+                </svg>
               </div>
               <div class="loading-state" id="loadingState">LOADING SURFACE<span>...</span></div>
             </div>
@@ -70,6 +79,7 @@
                 <span><small>STATUS</small><b class="green">READY</b></span>
               </div>
             </div>
+            <p class="preview-note">UV画像の部位を静止画の車体へ投影した参考表示です。実車の3D表示とは形状・模様の位置が異なる場合があります。<a href="https://github.com/teslamotors/custom-wraps/blob/master/model3/template.png" target="_blank" rel="noreferrer">公式テンプレートを見る ↗</a></p>
           </div>
 
           <aside class="control-panel" id="collection">
